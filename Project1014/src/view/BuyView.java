@@ -167,7 +167,7 @@ public class BuyView extends JFrame {
 		
 		setTitle("구매 테이블");
 		//위치와 크기를 한꺼번에 설정 
-		setBounds(200,100,400,300);
+		setBounds(200,200,400,300);
 		//종료 기능 부여 
 		setDefaultCloseOperation(
 				EXIT_ON_CLOSE);

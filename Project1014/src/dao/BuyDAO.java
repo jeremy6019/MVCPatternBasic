@@ -139,7 +139,7 @@ public class BuyDAO {
 			//select 구문 실행 
 			rs = pstmt.executeQuery();			
 			while(rs.next()) {
-				Buy buy = new Buy();
+			    Buy buy = new Buy();
 				buy.setBuycode(
 						rs.getInt("buycode"));
 				buy.setItemname(
@@ -198,7 +198,9 @@ public class BuyDAO {
 			e.printStackTrace();
 		}	
 		return buy;
-	  }	
+	  }
+
+
 	
 	
 	

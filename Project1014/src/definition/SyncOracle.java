@@ -753,6 +753,138 @@ case "지움":
 		    
 		    buyView.display();
 			break;
+
+9) 삽입 버튼을 눌렀을 때 수행될 코드를 BuyEventHandler클래스의 버튼을 눌렀을 때 
+호출되는 메소드 추가 
+
+=>삽입하는 기능을 추가할 때는 삽입을 하기 전에 유효성 검사를 수행해야 합니다. 
+클라이언트 - 서버 프로그램을 만들면 클라이언트에서도 하고 서버에서도 해주는 것이
+좋습니다. 
+클라이언트에서 하면 좋은 점은 빠르게 반응한다는 것인데 안 좋은 점은 보안이 취약해서
+클라이언트의 유효성 검사를 무효화 시킬 수  있습니다. 
+Database에서는 무결성 제약조건(not null, unique, primary key, check, foreign key)
+이 유효성 검사입니다. 
+
+=>지움 버튼을 누르고 입력했는지 확인해보고 지움 버튼을 누르지 않고 입력했다면 무효 
+
+=> itemname 과 ctmid의 데이터 유무를 체크해서 입력한 내용이 없으면 무효 
+
+  - 지움버튼을 눌렀는지 확인하기 위한 변수는 인스턴스 변수로 추가 
+  boolean flag; 
+  
+ - 지움 버튼을 눌렀을 때 flag을 변동시킴  
+	// 지움 버튼을 눌렀다는 표시를 하기 위해서 
+			// flag의 값을 변경 
+			flag = true;		
+
+- 취소 버튼을 눌렀을 때 flag의 값을 원래대로 복원 
+flag = false; 
+	case "삽입":
+			//지움 버튼을 누르지 않았다면 삽입 취소 
+			if(flag = false) {
+				JOptionPane.showMessageDialog(
+						null, "지움 버튼을 누르고 입력하세요!!");
+				return;
+			}
+			// itemname의 null의 입력 체크 
+			// itemname에서 중간 공백 삭제? 
+			itemname = 
+					buyView.txtItemName.
+					getText().trim();
+			if( itemname.length() < 1 ) {
+				JOptionPane.showMessageDialog(
+						null, "아이템 이름은 필수!!");
+				return;
+			}
+			
+			ctmid = 
+					buyView.txtCtmId.
+					getText().trim();
+			if( ctmid.length() < 1 ) {
+				JOptionPane.showMessageDialog(
+						null, "구매자 아이디는 필수!!");
+				return;
+			}
+			
+			String buyCount =
+					buyView.txtCount.
+					getText().trim();
+			//삽입할 데이터를 생성 
+			Buy buy1 = new Buy();
+			//값을 채워 넣기 
+			buy1.setItemname(itemname);
+			buy1.setCtmid(ctmid);
+			buy1.setCount(
+					Integer.parseInt(buyCount));
+			//삽입하는 메소드 호출 
+			BuyDAO dao = new BuyDAO();
+			int r1 = dao.insertBuy(buy1) ;
+			//삽입 성공한 경우 
+			if( r1 > 0) {
+				Thread th = new Thread() {
+				   	public void run() {
+						//전체 데이터를 가져오기 
+						buyView.list =
+								dao.getReadAll();
+						//마지막 데이터를 출력 
+						buyView.idx = buyView.list.size()-1;
+						buyView.display();
+					}
+				};
+				th.start();
+				//성공 메시지를 출력 
+				JOptionPane.showMessageDialog(
+						null, "삽입 성공!!");		
+				//버튼들을 활성화 
+				buyView.btnClear.setText("지움");
+				buyView.btnDelete.setEnabled(true);
+				buyView.btnUpdate.setEnabled(true);
+				buyView.btnSearch.setEnabled(true);
+			}else {
+				//실패 메세지를 출력 
+				JOptionPane.showMessageDialog(
+						null, "삽입 실패!!");		
+			}
+			
+			break;
+
+10)조회버튼을 눌렀을 때 수행핳ㄹ 코드를 추가 
+=> 조회는 하나의 문자열을 입력받을 수 있는 대화상자를 출력하고 대화상자에 입력한 
+문자열에 해당하는 코드를 가진 데이터를 찾아오기 
+case "조회":
+			
+			String code = 
+			JOptionPane.showInputDialog(
+					"코드를 입력하세요!!");
+			//취소 버튼을 누른 것이 아니라면 
+		    if( code != null) {
+		        dao = new BuyDAO();
+		        buy = 
+		        		  dao.readBuy(Integer.parseInt(code));
+		        if(buy == null) {
+		        	JOptionPane.showMessageDialog(
+							null, "없는 코드 입니다!!");		
+		        }
+		        buyView.list.clear();
+		        buyView.list.add(buy);
+		        buyView.idx = 0; 
+		        buyView.display();
+		    }
+			
+			break;
+
+
+=> 순차적으로 실행될 필요가 없는 코드는 스레드를 이용해서 비동기적으로 실행되도
+록 하는 것이 좋습니다.
+오랜 시간이 걸리는 작업(네트워크 작업)이나 모달 대화상자(대화상자가 화면에 출력되어 있는 동안 
+다른 작업을 수행할 수 없도록 하는 대화상자)를 출력하는 작업은 스레드를 이용해서 
+비동기적으로 동작하도록 하는 것이 좋습니다.  
+			
+			
+=>삽입이나 수정의 처리과정 
+삽입이나 수정할 데이터를 읽어오기 -> 유효성검사 -> 데이터 삽입이나 
+수정할 데이터를 생성 -> 삽입이나 수정 -> 종료 후 수행할 내용(메세지를 출력하고 데이터를
+재출력하거나 다른 화면으로 이동)  
 			
 
 ** 비 연결 데이터베이스 사용 
@@ -774,7 +906,14 @@ case "지움":
   
   => MVC패턴을 적용해서 프로그래밍을 하면 만들기는 어렵지만 유지봇수가 수월해 집니다. 
   
-  
+  ** 현재 작업 중인 클래스 
+ 1.Buy 테이블을 생성 
+ 2.Buy테이블에 저장된 데이터를 표현할 클래스(DTO, VO): Buy
+ 3.Buy테이블과 연동하기 위한 코드를 작성한 클래스(DAO - Repository): BuyDAO
+ 4.데이터를 출력하고 작업에 관련된 UI클래스(View - Presentation): BuyView 
+ 5.BuyView클래스에서 이벤트가 발생하면 이 이벤트를 처리하기 위한 클래스
+ (EventHandler - Listener): BuyEventHandler 
+ 6.Java Application을 만들기 위한 Entry Point에 해당하는 클래스: Main  
   
   
   
